@@ -3,7 +3,7 @@ require('tm')
 require('SnowballC')
 require('wordcloud')
 pathroot = "/home/nicolas/Escritorio/USACH/Topicos/Taller de mineria de datos avanzada/tmdaLab3_MaxEnt/"
-#pathroot =~"/Documentos/2-2019/TMDA/tmdaLab3/"
+#pathroot ="~/Documentos/2-2019/TMDA/tmdaLab3/"
 path1 = paste(pathroot,"data/amazon_cells_labelled.txt",sep="")
 path2 = paste(pathroot,"data/imdb_labelled.txt",sep="")
 path3 = paste(pathroot,"data/yelp_labelled.txt",sep="")
@@ -18,7 +18,7 @@ colnames(dataAux) = colnames
 
 data = rbind(data,dataAux)
 dataAux = read.delim(path3,header=FALSE)
-colnames(dataAux) = colnames
+  colnames(dataAux) = colnames
 
 data = na.omit(rbind(data,dataAux))
 
@@ -53,7 +53,7 @@ matrix.m <- as.matrix(matrix.aux)
 matrix.sorted <- sort(rowSums(matrix.m),decreasing=TRUE)
 #3963 tokens
 data.df <- data.frame(word = names(matrix.sorted),freq=matrix.sorted)
-wordcloud(data.df$word,data.df$freq,min.freq=30, colors = brewer.pal(8,"Dark2"),max.words =80)
+wordcloud(data.df$word,data.df$freq,min.freq=30,scale=c(2.0,0.5), colors =brewer.pal(9,"Set1"),max.words =30)
 
 
 corpus.positive = Corpus(VectorSource(data.positive$text))
@@ -81,7 +81,7 @@ matrix.m.positive <- as.matrix(matrix.aux.positive)
 matrix.sorted.positive <- sort(rowSums(matrix.m.positive),decreasing=TRUE)
 #3963 tokens
 data.df.positive <- data.frame(word = names(matrix.sorted.positive),freq=matrix.sorted.positive)
-wordcloud(data.df.positive$word,data.df.positive$freq,min.freq=30, colors = brewer.pal(8,"Dark2"),max.words =80)
+wordcloud(data.df.positive$word,data.df.positive$freq,min.freq=35,scale=c(2.0,0.5), colors = brewer.pal(9,"Blues"),max.words =80)
 
 
 corpus.negative = Corpus(VectorSource(data.negative$text))
@@ -110,7 +110,7 @@ matrix.m.negative <- as.matrix(matrix.aux.negative)
 matrix.sorted.negative <- sort(rowSums(matrix.m.negative),decreasing=TRUE)
 #3963 tokens
 data.df.negative <- data.frame(word = names(matrix.sorted.negative),freq=matrix.sorted.negative)
-wordcloud(data.df.negative$word,data.df.negative$freq,min.freq=20, colors = brewer.pal(8,"Dark2"),max.words =80)
+wordcloud(data.df.negative$word,data.df.negative$freq,min.freq=35,scale=c(2.0,0.5), colors = brewer.pal(8,"Reds"),max.words =80)
 
 
 
@@ -143,13 +143,12 @@ sparse.train <- as.compressed.matrix(matrix.train)
 data.me.t <- tune.maxent(sparse.train,data.train$class,nfold=3,showall=TRUE, verbose=TRUE)
 print(data.me.t)
 
-model<-maxent(sparse.train,data.train$class, l1_regularizer=0.6, use_sgd=FALSE, set_heldout=0, verbose=TRUE)
+model<-maxent(sparse.train,data.train$class, l2_regularizer=0.2, use_sgd=FALSE, set_heldout=0, verbose=TRUE)
 
 
 corpus.test = Corpus(VectorSource(data.test$text))
 
 
-summary(corpus.test)
 
 
 corpus.test = tm_map(corpus.test,content_transformer(removePunctuation))
@@ -179,7 +178,7 @@ results$recuperado <- "2.no recuperado"
 results$recuperado[which(results$label == results$predicted)] <- "1.recuperado"
 
 
-print(results)
+
 
 
 table(results$recuperado,results$relevant)
