@@ -3,7 +3,7 @@ require('tm')
 require('SnowballC')
 require('wordcloud')
 pathroot = "/home/nicolas/Escritorio/USACH/Topicos/Taller de mineria de datos avanzada/tmdaLab3_MaxEnt/"
-#pathroot ="~/Documentos/2-2019/TMDA/tmdaLab3/"
+#pathroot ="~ /Documentos/2-2019/TMDA/tmdaLab3/"
 path1 = paste(pathroot,"data/amazon_cells_labelled.txt",sep="")
 path2 = paste(pathroot,"data/imdb_labelled.txt",sep="")
 path3 = paste(pathroot,"data/yelp_labelled.txt",sep="")
@@ -122,10 +122,18 @@ train_ind = sample(seq_len(nrow(data)),size = smp_size)
 data.train = data[train_ind,]
 data.test = data[-train_ind,]
 
-corpus.train = Corpus(VectorSource(data.train$text))
+corpus.train.np = Corpus(VectorSource(data.train$text))
+
+matrix.train.np = DocumentTermMatrix(corpus.train.np)
+sparse.train.np <- as.compressed.matrix(matrix.train.np)
+
+data.me.t.np <- tune.maxent(sparse.train.np,data.train$class,nfold=3,showall=TRUE, verbose=TRUE)
+print(data.me.t.np)
+
+model.np<-maxent(sparse.train.np,data.train$class, l2_regularizer=0.2, use_sgd=FALSE, set_heldout=0, verbose=TRUE)
 
 
-corpus.train = tm_map(corpus.train,content_transformer(removePunctuation))
+corpus.train = tm_map(corpus.train.np,content_transformer(removePunctuation))
 
 corpus.train = tm_map(corpus.train,content_transformer(tolower))
 
@@ -146,12 +154,28 @@ print(data.me.t)
 model<-maxent(sparse.train,data.train$class, l2_regularizer=0.2, use_sgd=FALSE, set_heldout=0, verbose=TRUE)
 
 
-corpus.test = Corpus(VectorSource(data.test$text))
+corpus.test.np = Corpus(VectorSource(data.test$text))
+
+matrix.test.np = DocumentTermMatrix(corpus.test.np)
+sparse.test.np <- as.compressed.matrix(matrix.test.np)
+
+results.np <- as.data.frame(predict(model.np,sparse.test.np))
+
+options(digits=15)
+results.np$relevant <- "1.relevante"
+results.np$relevant[which(results.np$label == 0)] <- "2.no relevante"
+results.np$recuperado <- "2.no recuperado"
+results.np$recuperado[which(data.test$class == results.np$label)] <- "1.recuperado"
 
 
 
 
-corpus.test = tm_map(corpus.test,content_transformer(removePunctuation))
+
+table(results.np$recuperado,results.np$relevant)
+
+
+
+corpus.test = tm_map(corpus.test.np,content_transformer(removePunctuation))
 
 corpus.test = tm_map(corpus.test,content_transformer(tolower))
 
@@ -169,16 +193,14 @@ sparse.test <- as.compressed.matrix(matrix.test)
 results <- as.data.frame(predict(model,sparse.test))
 
 options(digits=15)
-results$predicted <- 0
-results$predicted[which(as.double(results$"0") > as.double(results$"1"))] <- 0
-results$predicted[which(as.double(results$"0") < as.double(results$"1"))] <- 1
 results$relevant <- "1.relevante"
 results$relevant[which(results$label == 0)] <- "2.no relevante"
 results$recuperado <- "2.no recuperado"
-results$recuperado[which(results$label == results$predicted)] <- "1.recuperado"
+results$recuperado[which(data.test$class == results$label)] <- "1.recuperado"
 
 
 
 
 
 table(results$recuperado,results$relevant)
+
