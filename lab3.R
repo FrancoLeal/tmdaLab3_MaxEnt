@@ -2,7 +2,7 @@ require('maxent')
 require('tm')
 require('SnowballC')
 require('wordcloud')
-pathroot = "/home/nicolas/Escritorio/USACH/Topicos/Taller de mineria de datos avanzada/tmdaLab3_MaxEnt/"
+pathroot = "/home/nicolas/Documents/USACH/TMDA/tmdaLab3_MaxEnt/"
 #pathroot ="~ /Documentos/2-2019/TMDA/tmdaLab3/"
 path1 = paste(pathroot,"data/amazon_cells_labelled.txt",sep="")
 path2 = paste(pathroot,"data/imdb_labelled.txt",sep="")
@@ -25,23 +25,30 @@ data = na.omit(rbind(data,dataAux))
 data.positive = data[which(data$class == 1),]
 data.negative = data[which(data$class == 0),]
 
+transform_corpus <- function(corpusF) {
+  corpusF = tm_map(corpusF,content_transformer(removePunctuation))
+  
+  corpusF = tm_map(corpusF,content_transformer(tolower))
+  
+  corpusF = tm_map(corpusF,content_transformer(removeWords),stopwords("english"))
+  
+  corpusF = tm_map(corpusF,stemDocument)
+  
+  corpusF = tm_map(corpusF,stripWhitespace)
+  
+  corpusF = tm_map(corpusF,content_transformer(removeNumbers))
+  
+  return(corpusF)
+}
+
+
 corpus = Corpus(VectorSource(data$text))
 
 
 summary(corpus)
 
 
-corpus = tm_map(corpus,content_transformer(removePunctuation))
-
-corpus = tm_map(corpus,content_transformer(tolower))
-
-corpus = tm_map(corpus,content_transformer(removeWords),stopwords("english"))
-
-corpus = tm_map(corpus,stemDocument)
-
-corpus = tm_map(corpus,stripWhitespace)
-
-corpus = tm_map(corpus,content_transformer(removeNumbers))
+corpus = transform_corpus(corpus)
 
 matrix = DocumentTermMatrix(corpus)
 sparse <- as.compressed.matrix(matrix)
@@ -59,17 +66,7 @@ wordcloud(data.df$word,data.df$freq,min.freq=30,scale=c(2.0,0.5), colors =brewer
 corpus.positive = Corpus(VectorSource(data.positive$text))
 
 
-corpus.positive = tm_map(corpus.positive,content_transformer(removePunctuation))
-
-corpus.positive = tm_map(corpus.positive,content_transformer(tolower))
-
-corpus.positive = tm_map(corpus.positive,content_transformer(removeWords),stopwords("english"))
-
-corpus.positive = tm_map(corpus.positive,stemDocument)
-
-corpus.positive = tm_map(corpus.positive,stripWhitespace)
-
-corpus.positive = tm_map(corpus.positive,content_transformer(removeNumbers))
+corpus.positive = transform_corpus(corpus.positive)
 
 matrix.positive = DocumentTermMatrix(corpus.positive)
 sparse.positive <- as.compressed.matrix(matrix.positive)
@@ -88,17 +85,7 @@ corpus.negative = Corpus(VectorSource(data.negative$text))
 
 
 
-corpus.negative = tm_map(corpus.negative,content_transformer(removePunctuation))
-
-corpus.negative = tm_map(corpus.negative,content_transformer(tolower))
-
-corpus.negative = tm_map(corpus.negative,content_transformer(removeWords),stopwords("english"))
-
-corpus.negative = tm_map(corpus.negative,stemDocument)
-
-corpus.negative = tm_map(corpus.negative,stripWhitespace)
-
-corpus.negative = tm_map(corpus.negative,content_transformer(removeNumbers))
+corpus.negative = transform_corpus(corpus.negative)
 
 matrix.negative = DocumentTermMatrix(corpus.negative)
 sparse.negative <- as.compressed.matrix(matrix.negative)
@@ -133,17 +120,7 @@ print(data.me.t.np)
 model.np<-maxent(sparse.train.np,data.train$class, l2_regularizer=0.2, use_sgd=FALSE, set_heldout=0, verbose=TRUE)
 
 
-corpus.train = tm_map(corpus.train.np,content_transformer(removePunctuation))
-
-corpus.train = tm_map(corpus.train,content_transformer(tolower))
-
-corpus.train = tm_map(corpus.train,content_transformer(removeWords),stopwords("english"))
-
-corpus.train = tm_map(corpus.train,stemDocument)
-
-corpus.train = tm_map(corpus.train,stripWhitespace)
-
-corpus.train = tm_map(corpus.train,content_transformer(removeNumbers))
+corpus.train = transform_corpus(corpus.train.np)
 
 matrix.train = DocumentTermMatrix(corpus.train)
 sparse.train <- as.compressed.matrix(matrix.train)
@@ -175,17 +152,7 @@ table(results.np$recuperado,results.np$relevant)
 
 
 
-corpus.test = tm_map(corpus.test.np,content_transformer(removePunctuation))
-
-corpus.test = tm_map(corpus.test,content_transformer(tolower))
-
-corpus.test = tm_map(corpus.test,content_transformer(removeWords),stopwords("english"))
-
-corpus.test = tm_map(corpus.test,stemDocument)
-
-corpus.test = tm_map(corpus.test,stripWhitespace)
-
-corpus.test = tm_map(corpus.test,content_transformer(removeNumbers))
+corpus.test = transform_corpus(corpus.test.np)
 
 matrix.test = DocumentTermMatrix(corpus.test)
 sparse.test <- as.compressed.matrix(matrix.test)
